@@ -22,10 +22,8 @@ chosen_model = st.selectbox("Select Model", ["gemini-2.5-flash", "gemini-2.5-pro
 if chosen_model:
     model = genai.GenerativeModel(chosen_model) # type: ignore
 
-st.markdown("""
-            *gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*/n
-            *gemini-2.5-pro: More advanced, provides deeper insights and better accuracy, is limited.*
-            """)
+st.markdown("*gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*")
+st.markdown("*gemini-2.5-pro: More advanced, provides deeper insights and better accuracy, is limited.*")
 
 st.divider()
 camera_image = st.camera_input("Take a photo of your rock")
@@ -165,5 +163,6 @@ if st.session_state.data is not None:
         st.warning("Medium")
     else:
         st.error("Low")
+
 
 
