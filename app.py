@@ -23,7 +23,7 @@ if chosen_model:
     model = genai.GenerativeModel(chosen_model) # type: ignore
 
 st.markdown("""
-            *gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*
+            *gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*/n
             *gemini-2.5-pro: More advanced, provides deeper insights and better accuracy, is limited.*
             """)
 
@@ -165,4 +165,5 @@ if st.session_state.data is not None:
         st.warning("Medium")
     else:
         st.error("Low")
+
 
