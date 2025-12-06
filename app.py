@@ -12,6 +12,8 @@ if "data" not in st.session_state:
 
 st.set_page_config(page_title="Rock Analyzer", layout="centered")
 
+
+
 st.title("Rock Analyzer")
 st.write("Take a photo of your rock and get all the info about it!")
 
@@ -22,33 +24,12 @@ chosen_model = st.selectbox("Select Model", ["gemini-2.5-flash", "gemini-2.5-pro
 if chosen_model:
     model = genai.GenerativeModel(chosen_model) # type: ignore
 
-st.markdown("*gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*")
-st.markdown("*gemini-2.5-pro: More advanced, provides deeper insights and better accuracy, is limited.*")
+st.markdown("""
+            *gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*
+            *gemini-2.5-pro: More advanced, provides deeper insights and better accuracy, is limited.*
+            """)
 
 st.divider()
-camera_image = st.camera_input("Take a photo of your rock")
-if camera_image is not None:
-    st.session_state.image = camera_image
-else:
-    st.info("Use the camera input above to capture an image of a rock to analyze.")
-
-
-st.markdown(
-"""
-<div style="
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px;
-    font-size: 20px;
-    font-weight: bold;
-    opacity: 1;
-">
-    OR
-</div>
-""",
-unsafe_allow_html=True
-)
 
 uploaded_file = st.file_uploader("Upload an image of your rock", type=["jpg", "jpeg", "png"])
 if uploaded_file is not None:
@@ -62,7 +43,7 @@ if st.session_state.image is not None:
     
     if st.button("Get rock analysis"):
         with st.spinner("Analyzing your rock..."):
-            response = model.generate_content([
+            response = model.generate_content([ # type: ignore
                 """Please analyze this image of a rock and provide detailed information about its type, composition, and any interesting facts. return it in this example format:
                 {
                     "Rock Type":"Metamorphic - Gneiss"
@@ -163,6 +144,3 @@ if st.session_state.data is not None:
         st.warning("Medium")
     else:
         st.error("Low")
-
-
-
