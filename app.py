@@ -1,8 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
-import base64
-from io import BytesIO
-from PIL import Image
+
 
 
 if "image" not in st.session_state:
@@ -18,10 +16,18 @@ st.title("Rock Analyzer")
 st.write("Take a photo of your rock and get all the info about it!")
 
 genai.configure(api_key="AIzaSyAA9aamAEt8BYT4Y98wARoFVzz3zhoyvvc") # type: ignore
-model = genai.GenerativeModel("gemini-2.5-flash") # type: ignore
 
 
+chosen_model = st.selectbox("Select Model", ["gemini-2.5-flash", "gemini-2.5-pro"])
+if chosen_model:
+    model = genai.GenerativeModel(chosen_model) # type: ignore
 
+st.markdown("""
+            *gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*
+            *gemini-2.5-pro: More advanced, provides deeper insights and better accuracy, is limited.*
+            """)
+
+st.divider()
 camera_image = st.camera_input("Take a photo of your rock")
 if camera_image is not None:
     st.session_state.image = camera_image
