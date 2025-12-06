@@ -15,7 +15,7 @@ st.set_page_config(page_title="Rock Analyzer", layout="centered")
 st.title("Rock Analyzer")
 st.write("Take a photo of your rock and get all the info about it!")
 
-genai.configure(api_key="AIzaSyAA9aamAEt8BYT4Y98wARoFVzz3zhoyvvc") # type: ignore
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"]) # type: ignore
 
 
 chosen_model = st.selectbox("Select Model", ["gemini-2.5-flash", "gemini-2.5-pro"])
@@ -165,3 +165,4 @@ if st.session_state.data is not None:
         st.warning("Medium")
     else:
         st.error("Low")
+
