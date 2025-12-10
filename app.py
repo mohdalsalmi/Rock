@@ -17,7 +17,7 @@ st.set_page_config(page_title="Rock Analyzer", layout="centered")
 st.title("Rock Analyzer")
 st.write("Take a photo of your rock and get all the info about it!")
 
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"]) # type: ignore
+genai.configure(api_key=st.secrets.GEMINI_API_KEY) # type: ignore
 
 
 chosen_model = st.selectbox("Select Model", ["gemini-2.5-flash", "gemini-2.5-pro"])
@@ -30,6 +30,29 @@ st.markdown("""
             """)
 
 st.divider()
+camera_image = st.camera_input("Take a photo of your rock")
+if camera_image is not None:
+    st.session_state.image = camera_image
+else:
+    st.info("Use the camera input above to capture an image of a rock to analyze.")
+
+
+st.markdown(
+"""
+<div style="
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    font-size: 20px;
+    font-weight: bold;
+    opacity: 1;
+">
+    OR
+</div>
+""",
+unsafe_allow_html=True
+)
 
 uploaded_file = st.file_uploader("Upload an image of your rock", type=["jpg", "jpeg", "png"])
 if uploaded_file is not None:
