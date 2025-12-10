@@ -69,7 +69,6 @@ if st.session_state.image is not None:
     language = st.selectbox("Select Language for Analysis", ["English", "Arabic", "French"], index=0)
     if language:
         st.session_state.language = language
-    st.success(f"Selected Language: {st.session_state.language}")
     if st.button("Get rock analysis"):
         with st.spinner("Analyzing your rock..."):
             response = client.chat.completions.create(
@@ -207,3 +206,4 @@ if st.session_state.data is not None:
     # Close RTL div if Arabic was selected
     if language == "Arabic": # type: ignore
         st.markdown('</div>', unsafe_allow_html=True)
+
