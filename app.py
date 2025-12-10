@@ -1,6 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
-
+from groq import Groq
+import base64
 
 
 if "image" not in st.session_state:
@@ -8,6 +8,9 @@ if "image" not in st.session_state:
 
 if "data" not in st.session_state:
     st.session_state["data"] = None
+
+if "language" not in st.session_state:
+    st.session_state["language"] = None
 
 
 st.set_page_config(page_title="Rock Analyzer", layout="centered")
@@ -17,17 +20,14 @@ st.set_page_config(page_title="Rock Analyzer", layout="centered")
 st.title("Rock Analyzer")
 st.write("Take a photo of your rock and get all the info about it!")
 
-genai.configure(api_key=st.secrets.GEMINI_API_KEY) # type: ignore
+client = Groq(api_key=st.secrets.GROQ_API_KEY) # type: ignore
 
 
-chosen_model = st.selectbox("Select Model", ["gemini-2.5-flash", "gemini-2.5-pro"])
-if chosen_model:
-    model = genai.GenerativeModel(chosen_model) # type: ignore
+chosen_model = st.selectbox("Select Model", ["meta-llama/llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-maverick-17b-128e-instruct"])
 
-st.markdown("""
-            *gemini-2.5-flash: Faster and cheaper, suitable for quick analyses.*
-            *gemini-2.5-pro: More advanced, provides deeper insights and better accuracy, is limited.*
-            """)
+st.markdown("""*llama-4-scout: Faster and cheaper, suitable for quick analyses.*""")
+
+st.markdown("""*llama-4-maverick: More advanced, provides deeper insights and better accuracy.*""")
 
 st.divider()
 camera_image = st.camera_input("Take a photo of your rock")
@@ -62,50 +62,74 @@ if uploaded_file is not None:
 if st.session_state.image is not None:
     st.image(st.session_state.image, caption="Captured image", use_container_width=True)
     
+    st.session_state.image.seek(0)
     image_data = st.session_state.image.read()
+    base64_image = base64.b64encode(image_data).decode('utf-8')
     
+    language = st.selectbox("Select Language for Analysis", ["English", "Arabic", "French"], index=0)
+    if language:
+        st.session_state.language = language
+    st.success(f"Selected Language: {st.session_state.language}")
     if st.button("Get rock analysis"):
         with st.spinner("Analyzing your rock..."):
-            response = model.generate_content([ # type: ignore
-                """Please analyze this image of a rock and provide detailed information about its type, composition, and any interesting facts. return it in this example format:
+            response = client.chat.completions.create(
+                model=chosen_model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format in """ + st.session_state.language + """:
                 {
-                    "Rock Type":"Metamorphic - Gneiss"
+                    "Rock Type": "Metamorphic - Gneiss",
                     
-                    "Composition":["quartz", "feldspar", "biotite", "amphibole"]
+                    "Composition": ["quartz: identified from...", "feldspar: ...", "biotite: ...", "amphibole: ..."],
 
-                    "Color":["white", "black", "grey"]
+                    "Metals": ["Iron(Fe): identified from ...", "Magnesium(Mg): ...", ...],
 
-                    "Texture": ["banded", "coarse-grained", "foliated"]
+                    "Color": ["white", "black", "grey"],
 
-                    "Hardness (Mohs)":"6-7"
+                    "Texture": ["banded", "coarse-grained", "foliated"],
 
-                    "Formation Process":"Formed from the intense metamorphism of pre-existing igneous (e.g., granite) or sedimentary rocks under high temperature and pressure, causing the segregation and alignment of different mineral grains into distinct light and dark bands (gneissic banding)."
+                    "Hardness (Mohs)": "6-7",
+
+                    "Formation Process":"Formed from the intense metamorphism of pre-existing igneous (e.g., granite) or sedimentary rocks under high temperature and pressure, causing the segregation and alignment of different mineral grains into distinct light and dark bands (gneissic banding).",
 
                     "Uses":[
                     "dimension stone",
                     "building material",
                     "crushed stone aggregate",
                     "decorative stone (countertops, flooring)"
-                    ]
+                    ],
 
                     "Interesting Facts":[
                     "It is a high-grade metamorphic rock, indicating significant heat and pressure during its formation.",
                     "The distinctive banding is called gneissic banding, resulting from mineral segregation.",
                     "Can exhibit a variety of compositions depending on the protolith (original rock type)."
-                    ]
+                    ],
                     
                     "Confidence Level":"return only High or Medium or Low"
                 }
-                """,
-                {"mime_type": "image/jpeg", "data": image_data}
-            ])
+                """
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            )
             
             st.success("Analysis:")
 
-            raw = response.text
+            raw = response.choices[0].message.content
 
             import re, json
-            match = re.search(r"\{.*\}", raw, flags=re.DOTALL)
+            match = re.search(r"\{.*\}", raw, flags=re.DOTALL) # type: ignore
             if match:
                 json_str = match.group(0)
                 st.session_state.data = json.loads(json_str)
@@ -117,6 +141,11 @@ if st.session_state.image is not None:
 
 if st.session_state.data is not None:
     data = st.session_state.data
+    
+    # Apply RTL styling if Arabic is selected
+    if language == "Arabic": # type: ignore
+        st.markdown('<div class="arabic-content">', unsafe_allow_html=True)
+    
     st.header("Rock Analysis Result")
     st.divider()
 
@@ -129,11 +158,18 @@ if st.session_state.data is not None:
         for mineral in data["Composition"]:
             st.markdown(f"- {mineral}")
 
+    with st.expander("Metals"):
+        st.subheader("Metals")
+        for metal in data["Metals"]:
+            st.markdown(f"- {metal}")
+        
     with st.expander("Color and Texture"):
         st.subheader("Color")
         for color in data["Color"]:
             st.markdown(f"- {color}")
+            
         st.divider()
+
         st.subheader("Texture")
         for texture in data["Texture"]:
             st.markdown(f"- {texture}")
@@ -167,3 +203,7 @@ if st.session_state.data is not None:
         st.warning("Medium")
     else:
         st.error("Low")
+    
+    # Close RTL div if Arabic was selected
+    if language == "Arabic": # type: ignore
+        st.markdown('</div>', unsafe_allow_html=True)
