@@ -7,6 +7,18 @@ with c2:
     if st.button("العربية", use_container_width=True):
         st.switch_page("pages/app.py", query_params={"lang": "Arabic"})
 
+
+with c2:
+    
+    st.divider()
+    if st.button("Smart English", use_container_width=True):
+        st.switch_page("pages/openrouter.py", query_params={"lang": "English"})
+    if st.button("العربية الذكي", use_container_width=True):
+        st.switch_page("pages/openrouter.py", query_params={"lang": "Arabic"})
+
+
+
+
 def hide_sidebar():
     st.markdown(
         """
