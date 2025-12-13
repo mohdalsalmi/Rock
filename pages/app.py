@@ -94,7 +94,7 @@ if st.session_state.image is not None:
                         "content": [
                             {
                                 "type": "text",
-                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format and it must be in """ + st.session_state.language + """:
+                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format and it must be in English:
                 {
                     "Rock Type": "Metamorphic - Gneiss",
                     
