@@ -16,6 +16,22 @@ if "language" not in st.session_state:
 st.set_page_config(page_title="Rock Analyzer", layout="centered")
 
 
+def hide_sidebar():
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebar"],
+            [data-testid="collapsedControl"] {
+                display: none;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+hide_sidebar()
+
 
 st.title("Rock Analyzer")
 st.write("Take a photo of your rock and get all the info about it!")
@@ -23,11 +39,8 @@ st.write("Take a photo of your rock and get all the info about it!")
 client = Groq(api_key=st.secrets.GROQ_API_KEY) # type: ignore
 
 
-chosen_model = st.selectbox("Select Model", ["meta-llama/llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-maverick-17b-128e-instruct"])
+chosen_model = "meta-llama/llama-4-maverick-17b-128e-instruct"
 
-st.markdown("""*llama-4-scout: Faster and cheaper, suitable for quick analyses.*""")
-
-st.markdown("""*llama-4-maverick: More advanced, provides deeper insights and better accuracy.*""")
 
 st.divider()
 camera_image = st.camera_input("Take a photo of your rock")
@@ -66,9 +79,11 @@ if st.session_state.image is not None:
     image_data = st.session_state.image.read()
     base64_image = base64.b64encode(image_data).decode('utf-8')
     
-    language = st.selectbox("Select Language for Analysis", ["English", "Arabic", "French"], index=0)
+    language = "English"
     if language:
         st.session_state.language = language
+    
+
     if st.button("Get rock analysis"):
         with st.spinner("Analyzing your rock..."):
             response = client.chat.completions.create(
@@ -79,7 +94,7 @@ if st.session_state.image is not None:
                         "content": [
                             {
                                 "type": "text",
-                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format in """ + st.session_state.language + """:
+                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format and it must be in """ + st.session_state.language + """:
                 {
                     "Rock Type": "Metamorphic - Gneiss",
                     
@@ -141,10 +156,6 @@ if st.session_state.image is not None:
 if st.session_state.data is not None:
     data = st.session_state.data
     
-    # Apply RTL styling if Arabic is selected
-    if language == "Arabic": # type: ignore
-        st.markdown('<div class="arabic-content">', unsafe_allow_html=True)
-    
     st.header("Rock Analysis Result")
     st.divider()
 
@@ -203,7 +214,3 @@ if st.session_state.data is not None:
     else:
         st.error("Low")
     
-    # Close RTL div if Arabic was selected
-    if language == "Arabic": # type: ignore
-        st.markdown('</div>', unsafe_allow_html=True)
-
