@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+from groq import Groq
 import base64
 
 language = st.query_params["lang"]
@@ -109,14 +109,10 @@ hide_sidebar()
 st.title(title_text)
 st.write(title_info)
 
-# Initialize OpenRouter client
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=st.secrets.OPENROUTER_API_KEY
-)
+client = Groq(api_key=st.secrets.GROQ_API_KEY) # type: ignore
 
-# Set the model to Qwen
-chosen_model = "qwen/qwen3-vl-235b-a22b-instruct"
+
+chosen_model = "meta-llama/llama-4-maverick-17b-128e-instruct"
 
 
 st.divider()
@@ -286,3 +282,4 @@ if st.session_state.data is not None:
         st.warning(medium)
     else:
         st.error(low)
+    
