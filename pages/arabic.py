@@ -104,7 +104,7 @@ if st.session_state.image is not None:
                         "content": [
                             {
                                 "type": "text",
-                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format and it must be in Arabic:
+                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format and the content must be in Arabic, but the dictionary keys must remain in English:
                 {
                     "Rock Type": "Metamorphic - Gneiss",
                     
@@ -151,6 +151,7 @@ if st.session_state.image is not None:
             st.success("التحليل:")
 
             raw = response.choices[0].message.content
+            st.write(raw)
 
             import re, json
             match = re.search(r"\{.*\}", raw, flags=re.DOTALL) # type: ignore
