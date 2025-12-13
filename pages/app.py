@@ -1,6 +1,79 @@
 import streamlit as st
-from groq import Groq
+from openai import OpenAI
 import base64
+
+language = st.query_params["lang"]
+
+if language == "English":
+    title_text = "Rock Analyzer"
+    title_info = "Take a photo of your rock and get all the info about it!"
+    camera_info = "Take a photo of your rock"
+    camera_additional_info = "Use the camera input above to capture an image of a rock to analyze."
+    upload_info = "Upload an image of your rock"
+    capture_info = "Captured image"
+    get_analysis_button = "Get rock analysis"
+    spinner_info = "Analyzing your rock..."
+    analysis = "Analysis:"
+    model_error_info = "Model did not return valid JSON."
+    rock_analysis_result = "Rock Analysis Result"
+    rock_type = "Rock Type"
+    composition = "Composition"
+    metals = "Metals"
+    color_and_texture = "Color and Texture"
+    color = "Color"
+    texture = "Texture"
+    hardness = "Hardness (Mohs)"
+    formation_process = "Formation Process"
+    uses = "Uses"
+    interesting_facts = "Interesting Facts"
+    confidence_level = "Confidence Level"
+    high = "High"
+    medium = "Medium"
+    low = "Low"
+else:
+    title_text = "محلل الصخور"
+    title_info = "التقط صورة لصخرتك واحصل على كل المعلومات عنها!"
+    camera_info = "التقط صورة لصخرتك"
+    camera_additional_info = "استخدم مدخل الكاميرا أعلاه لالتقاط صورة لصخرة لتحليلها."
+    upload_info = "قم بتحميل صورة لصخرتك"
+    capture_info = "الصورة الملتقطة"
+    get_analysis_button = "احصل على تحليل الصخرة"
+    spinner_info = "جارٍ تحليل صخرتك..."
+    analysis = "التحليل:"
+    model_error_info = "لم يُرجع النموذج JSON صالح."
+    rock_analysis_result = "نتيجة تحليل الصخر"
+    rock_type = "نوع الصخر"
+    composition = "التركيب"
+    metals = "المعادن"
+    color_and_texture = "اللون والملمس"
+    color = "اللون"
+    texture = "الملمس"
+    hardness = "الصلابة (مقياس موهس)"
+    formation_process = "عملية التكوين"
+    uses = "الاستخدامات"
+    interesting_facts = "حقائق مثيرة للاهتمام"
+    confidence_level = " مستوى الثقة"
+    high = "عالي"
+    medium = "متوسط"
+    low = "منخفض"
+
+    st.markdown("""
+    <style>
+    body, html {
+        direction: RTL;
+        unicode-bidi: bidi-override;
+        text-align: right;
+    }
+    p, div, input, label, h1, h2, h3, h4, h5, h6 {
+        direction: RTL;
+        unicode-bidi: bidi-override;
+        text-align: right;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+
 
 
 if "image" not in st.session_state:
@@ -13,7 +86,7 @@ if "language" not in st.session_state:
     st.session_state["language"] = None
 
 
-st.set_page_config(page_title="Rock Analyzer", layout="centered")
+st.set_page_config(page_title=title_text, layout="centered")
 
 
 def hide_sidebar():
@@ -33,21 +106,25 @@ def hide_sidebar():
 hide_sidebar()
 
 
-st.title("Rock Analyzer")
-st.write("Take a photo of your rock and get all the info about it!")
+st.title(title_text)
+st.write(title_info)
 
-client = Groq(api_key=st.secrets.GROQ_API_KEY) # type: ignore
+# Initialize OpenRouter client
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=st.secrets.OPENROUTER_API_KEY
+)
 
-
-chosen_model = "meta-llama/llama-4-maverick-17b-128e-instruct"
+# Set the model to Qwen
+chosen_model = "qwen/qwen3-vl-235b-a22b-instruct"
 
 
 st.divider()
-camera_image = st.camera_input("Take a photo of your rock")
+camera_image = st.camera_input(camera_info)
 if camera_image is not None:
     st.session_state.image = camera_image
 else:
-    st.info("Use the camera input above to capture an image of a rock to analyze.")
+    st.info(camera_additional_info)
 
 
 st.markdown(
@@ -67,25 +144,21 @@ st.markdown(
 unsafe_allow_html=True
 )
 
-uploaded_file = st.file_uploader("Upload an image of your rock", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader(upload_info, type=["jpg", "jpeg", "png"])
 if uploaded_file is not None:
     st.session_state.image = uploaded_file
 
 
 if st.session_state.image is not None:
-    st.image(st.session_state.image, caption="Captured image", use_container_width=True)
+    st.image(st.session_state.image, caption=capture_info, use_container_width=True)
     
     st.session_state.image.seek(0)
     image_data = st.session_state.image.read()
     base64_image = base64.b64encode(image_data).decode('utf-8')
     
-    language = "English"
-    if language:
-        st.session_state.language = language
-    
 
-    if st.button("Get rock analysis"):
-        with st.spinner("Analyzing your rock..."):
+    if st.button(get_analysis_button):
+        with st.spinner(spinner_info):
             response = client.chat.completions.create(
                 model=chosen_model,
                 messages=[
@@ -94,7 +167,7 @@ if st.session_state.image is not None:
                         "content": [
                             {
                                 "type": "text",
-                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format and it must be in English:
+                                "text": """Please analyze this image of a rock and provide detailed information about its type, composition with info about how you identified each one from the image of the rock, and any interesting facts. return it in JSON ONLY using this example format and the content must be in """ + language + """, but the dictionary keys must remain in English:
                 {
                     "Rock Type": "Metamorphic - Gneiss",
                     
@@ -138,7 +211,7 @@ if st.session_state.image is not None:
                 ]
             )
             
-            st.success("Analysis:")
+            st.success(analysis)
 
             raw = response.choices[0].message.content
 
@@ -148,7 +221,7 @@ if st.session_state.image is not None:
                 json_str = match.group(0)
                 st.session_state.data = json.loads(json_str)
             else:
-                st.error("Model did not return valid JSON.")
+                st.error(model_error_info)
                 st.write(raw)     
 
 
@@ -156,61 +229,60 @@ if st.session_state.image is not None:
 if st.session_state.data is not None:
     data = st.session_state.data
     
-    st.header("Rock Analysis Result")
+    st.header(rock_analysis_result)
     st.divider()
 
-    with st.expander("Rock Type"):
-        st.subheader("Rock Type")
+    with st.expander(rock_type):
+        st.subheader(rock_type)
         data["Rock Type"]
 
-    with st.expander("Composition"):
-        st.subheader("Composition")
+    with st.expander(composition):
+        st.subheader(composition)
         for mineral in data["Composition"]:
             st.markdown(f"- {mineral}")
 
-    with st.expander("Metals"):
-        st.subheader("Metals")
+    with st.expander(metals):
+        st.subheader(metals)
         for metal in data["Metals"]:
             st.markdown(f"- {metal}")
         
-    with st.expander("Color and Texture"):
-        st.subheader("Color")
+    with st.expander(color_and_texture):
+        st.subheader(color)
         for color in data["Color"]:
             st.markdown(f"- {color}")
             
         st.divider()
 
-        st.subheader("Texture")
+        st.subheader(texture)
         for texture in data["Texture"]:
             st.markdown(f"- {texture}")
 
-    with st.expander("Hardness"):
-        st.subheader("Hardness (Mohs)")
+    with st.expander(hardness):
+        st.subheader(hardness)
         data["Hardness (Mohs)"]
 
-    with st.expander("Formation Process"):
-        st.subheader("Formation Process")
+    with st.expander(formation_process):
+        st.subheader(formation_process)
         data["Formation Process"]
 
-    with st.expander("Uses"):
+    with st.expander(uses):
         uses = data.get("Uses", [])
         if uses:
-            st.subheader("Uses")
+            st.subheader(uses)
             for use in uses:
                 st.markdown(f"- {use}")
         
-    with st.expander("Interesting Facts"):
+    with st.expander(interesting_facts):
         facts = data.get("Interesting Facts", [])
         if facts:
-            st.subheader("Interesting Facts")
+            st.subheader(interesting_facts)
             for fact in facts:
                 st.markdown(f"- {fact}")
         
-    st.subheader("Confidence Level")
+    st.subheader(confidence_level)
     if data["Confidence Level"] == "High":
-        st.success("High")
+        st.success(high)
     elif data["Confidence Level"] == "Medium":
-        st.warning("Medium")
+        st.warning(medium)
     else:
-        st.error("Low")
-    
+        st.error(low)
